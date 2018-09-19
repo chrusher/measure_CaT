@@ -3,10 +3,12 @@
 import numpy as np
 
 '''
-'''
+Calculate spectral indices using the formula of Cenarro et al. (2001)
+Includes index definitions for a range of commonly used indices.
 
-#assume constant linear dispersion
-#C01 = Cenarro et al 2001 MNRAS 326 959
+Assumes constant linear dispersion
+C01 = Cenarro et al 2001 MNRAS 326 959
+'''
 
 # convert vacuum wavelengths to air wavelengths
 def vacuum_to_air(vacuum):
@@ -28,6 +30,10 @@ def bandSum(band, wavelengths, fluxes, edges=True):
 
     return total
 
+'''
+Calculate a spectral index using the formula provided in the appendices of
+Cenarro et al. (2001)
+'''
 class Index:
 
     def __init__(self, name, mainpassbands, continuumpassbands, mainweights=None, atomic=True, flux=False, vacuum=False):
@@ -217,7 +223,9 @@ class Index:
             
             return total, error, fluxtotal, fluxerror 
 
-
+'''
+Calculate the flux ratio of two wavelength regions
+'''
 class Ratio:
     
     def __init__(self, name, blueband, redband, vacuum=False):
@@ -305,30 +313,41 @@ class Ratio:
         
         return ratio, error
     
-    
-TiO89 = Ratio('TiO89', np.array([8835.0, 8855.0]), np.array([8870.0, 8890.0]), vacuum=True)
 
-# Only meant for normalized spectra
+'''
+Only meant for normalized spectra
+Based on Armandroff & Zinn (1988), used in Foster et al. (2010, 2011),
+Usher et al. (2012, 2015, 2018)
+'''
 CaT_gc = Index('CaT gc', np.array([[8490.0, 8506.0], [8532.0, 8552.0], [8653.0, 8671.0]]), None, np.array([1, 1, 1]))
-Pa12_gc = Index('Pa 12 gc', np.array([[8730.0, 8772.0]]), None, np.array([1]))
 
-Fe8387 = Index('Fe 8387', np.array([[]]), None, np.array([1]))
-Ti8435 = Index('Ti 8435', np.array([[8432.0, 8438.0]]), None, np.array([1]))
-Fe8514 = Index('Fe 8514', np.array([[8511.0, 8517.0]]), None, np.array([1]))
-Si8556 = Index('Fe 8556', np.array([[8553.0, 8559.0]]), None, np.array([1]))
-Fe8582 = Index('Fe 8582', np.array([[8579.0, 8585.0]]), None, np.array([1]))
-Fe8611 = Index('Fe 8611', np.array([[8608.5, 8614.5]]), None, np.array([1]))
-Fe8621 = Index('Fe 8621', np.array([[8608.0, 8614.0]]), None, np.array([1]))
-Si8648 = Index('Si 8648', np.array([[8645.0, 8651.0]]), None, np.array([1]))
-Fe8674 = Index('Fe 8674', np.array([[8671.5, 8677.5]]), None, np.array([1]))
-Fe8688 = Index('Fe 8688', np.array([[8685.0, 8691.0]]), None, np.array([1]))
+'''
+Armandroff & Zinn (1988) definition
+'''
+CaT_AZ_1 = Index('CaT A&Z 1', np.array([[8490.0, 8506.0]]), np.array([[8474.0, 8489.0], [8521.0, 8531.0]]), np.array([1]))
+CaT_AZ_2 = Index('CaT A&Z 2', np.array([[8532.0, 8552.0]]), np.array([[8521.0, 8531.0], [8555.0, 8595.0]]), np.array([1]))
+CaT_AZ_3 = Index('CaT A&Z 3', np.array([[8653.0, 8671.0]]), np.array([[8626.0, 8650.0], [8695.0, 8725.0]]), np.array([1]))
 
-Fe8824 = Index('Fe 8824', np.array([[8821.0, 8827.0]]), None, np.array([1]))
+def CaT_AZ(wavelengths, fluxes, sigmas=None, normalized=False, calcerrors=True):
+    az1, az1_e = CaT_AZ_1(wavelengths, fluxes, sigmas, normalized, calcerrors) 
+    az2, az2_e = CaT_AZ_2(wavelengths, fluxes, sigmas, normalized, calcerrors)
+    az3, az3_e = CaT_AZ_3(wavelengths, fluxes, sigmas, normalized, calcerrors)
+    az = az1 + az2 + az3
+    aze = (az1_e**2 + az2_e**2 + az3_e**2)**0.5
+    return az, aze
 
-Pa17 = Index('Pa 17', np.array([[8461.0, 8474.0]]), None, np.array([1]))
-Pa14 = Index('Pa 16', np.array([[8592.0, 8604.0]]), None, np.array([1]))
+'''
+Cenarro et al. (2001) definitions
+'''
+CaT_C01 = Index('CaT C01', np.array([[8484.0, 8513.0], [8522.0, 8562.0], [8642.0, 8682.0]]), np.array([[8474.0, 8484.0], [8563.0, 8577.0], [8619.0, 8642.0], [8700.0, 8725.0], [8776.0, 8792.0]]), np.array([1, 1, 1]))
+PaT_C01 = Index('PaT C01', np.array([[8461.0, 8474.0], [8577.0, 8619.0], [8730.0, 8772.0]]), np.array([[8474.0, 8484.0], [8563.0, 8577.0], [8619.0, 8642.0], [8700.0, 8725.0], [8776.0, 8792.0]]), np.array([1, 1, 1]))
+CaTS_C01 = Index('CaT* C01', np.array([[8484.0, 8513.0], [8522.0, 8562.0], [8642.0, 8682.0], [8461.0, 8474.0], [8577.0, 8619.0], [8730.0, 8772.0]]), np.array([[8474.0, 8484.0], [8563.0, 8577.0], [8619.0, 8642.0], [8700.0, 8725.0], [8776.0, 8792.0]]), np.array([1, 1, 1, -.93, -.93, -.93]))
 
-AllMetals = Index('All Metals', np.array([[8375.5, 8392.0],
+
+'''
+Fe86 weak metal line index from Usher et al. (2015)
+'''
+Fe86 = Index('All Metals', np.array([[8375.5, 8392.0],
                                         [8410.4, 8414.0],
                                         [8424.5, 8428.0],
                                         [8432.5, 8440.9],
@@ -380,71 +399,11 @@ AllMetals = Index('All Metals', np.array([[8375.5, 8392.0],
 
 
 
-WeakMetals = Index('All Metals', np.array([[8375.5, 8392.0],
-                                        [8393.5, 8398.5],
-                                        [8410.4, 8414.0],
-                                        [8424.5, 8428.0],
-                                        [8432.5, 8440.9],
-                                        [8463.7, 8473.0],
-                                        [8512.8, 8519.0],
-                                        [8555.0, 8557.4],
-                                        [8580.8, 8583.5],
-                                        [8595.7, 8601.0],
-                                        [8609.0, 8613.5],
-                                        [8620.2, 8623.3],
-                                        [8647.5, 8649.7],
-                                        [8673.2, 8676.5],
-                                        [8686.8, 8690.7],
-                                        [8709.0, 8714.0],
-                                        [8733.9, 8737.3],
-                                        [8746.6, 8753.8],
-                                        [8755.7, 8758.7],
-                                        [8762.5, 8767.5],
-                                        [8771.9, 8775.0],
-                                        [8789.3, 8794.7],
-                                        [8820.5, 8827.0],
-                                        [8836.0, 8840.5]]), 
-                np.array([[8392.0, 8393.5],
-                        [8399.4, 8400.9],
-                        [8402.7, 8410.3],
-                        [8414.5, 8422.1],
-                        [8428.6, 8432.3],
-                        [8441.4, 8445.2],
-                        [8447.9, 8449.4],
-                        [8451.5, 8455.4],
-                        [8458.0, 8463.0],
-                        [8474.0, 8493.3],
-                        [8505.3, 8512.1],
-                        [8519.2, 8525.2],
-                        [8528.3, 8531.3],
-                        [8552.3, 8554.9],
-                        [8557.5, 8580.4],
-                        [8583.9, 8595.3],
-                        [8601.2, 8608.4],
-                        [8613.9, 8619.4],
-                        [8624.3, 8646.6],
-                        [8649.8, 8652.5],
-                        [8676.9, 8678.1],
-                        [8684.0, 8686.1],
-                        [8692.7, 8697.6],
-                        [8700.3, 8708.9],
-                        [8714.5, 8726.8],
-                        [8731.5, 8733.2],
-                        [8737.6, 8740.8],
-                        [8743.3, 8746.1],
-                        [8754.5, 8755.4],
-                        [8759.0, 8762.2],
-                        [8768.0, 8771.5],
-                        [8775.5, 8788.7],
-                        [8797.6, 8802.2],
-                        [8811.0, 8820.0],
-                        [8828.0, 8835.0]]))
 
-CaT = Index('CaT', np.array([[8490.0, 8506.0], [8532.0, 8552.0], [8653.0, 8671.0]]), 
-                np.array([[ 8399.37361512, 8400.87320799], [ 8402.67271944, 8411.07043951], [ 8414.06962524, 8416.76889239], [ 8418.8683224,  8422.16742669], [ 8427.86587954, 8433.2644138 ], [ 8441.36221517, 8445.26115656], [ 8447.96042367, 8449.4600165 ], [ 8450.95960934, 8456.05822497], [ 8457.5578178,  8464.45594481], [ 8472.55374605, 8480.65154725], [ 8482.75097719, 8494.14788252], [ 8505.24486923, 8512.44291463], [ 8518.74120433, 8525.33941257], [ 8528.33859812, 8531.33778367], [ 8552.03216386, 8555.03134937], [ 8557.43069778, 8581.12426318], [ 8583.82353011, 8596.1201905 ], [ 8600.01913159, 8610.21636209], [ 8613.21554752, 8615.91481441], [ 8616.81457003, 8620.41359254], [ 8623.11285941, 8647.40626113], [ 8649.80560944, 8652.50487627], [ 8676.79827766, 8678.59778886], [ 8683.99632246, 8686.39567072], [ 8690.8944487,  8698.09249345], [ 8700.4918417,  8709.18947907], [ 8714.28809406, 8727.78442781], [ 8729.58393897, 8734.38263538], [ 8737.08190212, 8741.28076147], [ 8743.08027262, 8746.07945786], [ 8753.87733948, 8755.67685062], [ 8758.67603584, 8762.57497663], [ 8767.37367298, 8772.17236931], [ 8774.871636,   8789.26772493], [8795.2, 8802.2], [8811, 8820], [8828, 8835]]))
-
-#Lick indices
-#definitions from http://astro.wsu.edu/worthey/html/index.table.html
+'''
+Lick indices
+definitions from http://astro.wsu.edu/worthey/html/index.table.html
+'''
 Hdelta_A = Index('Hdelta_A', np.array([[4083.500, 4122.250]]), np.array([[4041.600, 4079.750], [4128.500, 4161.000]])) 
 Hdelta_F = Index('Hdelta_F', np.array([[4091.000, 4112.250]]), np.array([[4057.250, 4088.500], [4114.750, 4137.250]])) 
 CN_1 = Index('CN_1', np.array([[4142.125, 4177.125]]), np.array([[4080.125, 4117.625], [4244.125, 4284.125]]), atomic=False) 
@@ -471,26 +430,6 @@ Na_D = Index('Na_D', np.array([[5876.875, 5909.375]]), np.array([[5860.625, 5875
 TiO_1 = Index('TiO_1', np.array([[5936.625, 5994.125]]), np.array([[5816.625, 5849.125], [6038.625, 6103.625]]), atomic=False)
 TiO_2 = Index('TiO_2', np.array([[6189.625, 6272.125]]), np.array([[6066.625, 6141.625], [6372.625, 6415.125]]), atomic=False) 
 
-#Conroy & van Dokkum 2012 definitions
-
-
-
-
-Na_D_v = Index('Na_D', np.array([[8180.0, 8200.0]]), np.array([[8164.0, 8173.0], [8233.0, 8244.0]])) # 2012MNRAS.424..157V
-
-Na59 = Index('Na59', np.array([[5878.5, 5911.0]]), np.array([[5862.2, 5877.2], [5923.7, 5949.7]]), vacuum=True)
-Na82 = Index('Na82', np.array([[8177.0, 8205.0]]), np.array([[8170.0, 8177.0], [8205.0, 8215.0]]), vacuum=True)
-
-Ca39 = Index('Ca39', np.array([[3899.5, 4003.5]]), np.array([[3806.5, 3833.8], [4020.7, 4052.4]]), vacuum=True)
-
-
-MgI52b = Index('MgI52b', np.array([[5165.0, 5220.0]]), np.array([[5125.0, 5165.0], [5220.0, 5260.0]]), vacuum=True)
-
-
-
-
-
-
 def Fe_mean(wavelengths, fluxes, sigmas=None, normalized=False, calcerrors=True):
     fe52, fe52_e = Fe5270(wavelengths, fluxes, sigmas, normalized, calcerrors) 
     fe53, fe53_e = Fe5335(wavelengths, fluxes, sigmas, normalized, calcerrors)
@@ -501,35 +440,27 @@ def Fe_mean(wavelengths, fluxes, sigmas=None, normalized=False, calcerrors=True)
 Fe_mean.name = 'Fe_mean'
 
 
-Ha = Index('Ha', np.array([[6552.8, 6572.9]]), np.array([[6520.6, 6543.0], [6582.0, 6590.0], [6596.0, 6604.2], [6610.5, 6640.4], [6645.7, 6660.5], [6665.5, 6675.4], [6681.7, 6714.0]]))
 
 
-CaT_AZ_1 = Index('CaT A&Z 1', np.array([[8490.0, 8506.0]]), np.array([[8474.0, 8489.0], [8521.0, 8531.0]]), np.array([1]))
-CaT_AZ_2 = Index('CaT A&Z 2', np.array([[8532.0, 8552.0]]), np.array([[8521.0, 8531.0], [8555.0, 8595.0]]), np.array([1]))
-CaT_AZ_3 = Index('CaT A&Z 3', np.array([[8653.0, 8671.0]]), np.array([[8626.0, 8650.0], [8695.0, 8725.0]]), np.array([1]))
-
-def CaT_AZ(wavelengths, fluxes, sigmas=None, normalized=False, calcerrors=True):
-    az1, az1_e = CaT_AZ_1(wavelengths, fluxes, sigmas, normalized, calcerrors) 
-    az2, az2_e = CaT_AZ_2(wavelengths, fluxes, sigmas, normalized, calcerrors)
-    az3, az3_e = CaT_AZ_3(wavelengths, fluxes, sigmas, normalized, calcerrors)
-    az = az1 + az2 + az3
-    aze = (az1_e**2 + az2_e**2 + az3_e**2)**0.5
-    return az, aze
-
-CaT_C01 = Index('CaT C01', np.array([[8484.0, 8513.0], [8522.0, 8562.0], [8642.0, 8682.0]]), np.array([[8474.0, 8484.0], [8563.0, 8577.0], [8619.0, 8642.0], [8700.0, 8725.0], [8776.0, 8792.0]]), np.array([1, 1, 1]))
-PaT_C01 = Index('PaT C01', np.array([[8461.0, 8474.0], [8577.0, 8619.0], [8730.0, 8772.0]]), np.array([[8474.0, 8484.0], [8563.0, 8577.0], [8619.0, 8642.0], [8700.0, 8725.0], [8776.0, 8792.0]]), np.array([1, 1, 1]))
-CaTS_C01 = Index('CaT* C01', np.array([[8484.0, 8513.0], [8522.0, 8562.0], [8642.0, 8682.0], [8461.0, 8474.0], [8577.0, 8619.0], [8730.0, 8772.0]]), np.array([[8474.0, 8484.0], [8563.0, 8577.0], [8619.0, 8642.0], [8700.0, 8725.0], [8776.0, 8792.0]]), np.array([1, 1, 1, -.93, -.93, -.93]))
-
-CaT_narrow = Index('CaT narrow', np.array([[8495.518, 8500.518], [8539.589, 8544.589], [8659.64, 8664.64]]), np.array([[8474.0, 8484.0], [8563.0, 8577.0], [8619.0, 8642.0], [8700.0, 8725.0], [8776.0, 8792.0]]), np.array([1, 1, 1]))
-
+#Conroy & van Dokkum (2012) definitions
+TiO89 = Ratio('TiO89', np.array([8835.0, 8855.0]), np.array([8870.0, 8890.0]), vacuum=True)
+Na59 = Index('Na59', np.array([[5878.5, 5911.0]]), np.array([[5862.2, 5877.2], [5923.7, 5949.7]]), vacuum=True)
+Na82 = Index('Na82', np.array([[8177.0, 8205.0]]), np.array([[8170.0, 8177.0], [8205.0, 8215.0]]), vacuum=True)
+Ca39 = Index('Ca39', np.array([[3899.5, 4003.5]]), np.array([[3806.5, 3833.8], [4020.7, 4052.4]]), vacuum=True)
+MgI52b = Index('MgI52b', np.array([[5165.0, 5220.0]]), np.array([[5125.0, 5165.0], [5220.0, 5260.0]]), vacuum=True)
 Mg88 = Index('Mg88', np.array([[8801.9, 8816.9]]), np.array([[8777.4, 8789.4], [8847.4, 8857.4]]), vacuum=True)
+
+#Vazdekis et al. (2012)
+Na_D_v = Index('Na_D', np.array([[8180.0, 8200.0]]), np.array([[8164.0, 8173.0], [8233.0, 8244.0]])) # 2012MNRAS.424..157V
+
+#Cennaro et al. (2009)
 MgI = Index('MgI', np.array([[8802.5, 8811.0]]), np.array([[8781.0, 8787.0], [8831.0, 8835.5]]), np.array([1]))
 
-FeH99 = Index('FeH99', np.array([[9905.0, 9935.0]]), np.array([[9855.0, 9880.0], [9940.0, 9970.0]]), vacuum=True)
 
+#Nelan et al. (2005)
 HaA = Index('HaA', np.array([[6554.0, 6575.0]]), np.array([[6515.0, 6540.0], [6575.0, 6585.0]]), np.array([1]))
 HaF = Index('HaF', np.array([[6554.0, 6568.0]]), np.array([[6515.0, 6540.0], [6568.0, 6575.0]]), np.array([1]))
-HaW = Index('HaW', np.array([[6550.0, 6575.0]]), np.array([[6600.0, 6800.0]]), np.array([1]))
-Sky = Index('Sky', np.array([[8605.0, 8695.5]]), np.array([[8478.0, 8489.0], [8813.0, 8822.0]]), np.array([1 / 90.5]), flux=True)
-    
+
+
+#Pastorello et al. (2014)    
 CaT_gal = Index('CaT gal', np.array([[8483.0, 8513.0], [8527.0, 8557.0], [8647.0, 8677.0]]), np.array([[8474.0, 8483.0], [8514.0, 8526.0], [8563.0, 8577.0], [8619.0, 8642.0], [8680.0, 8705.0]]), np.array([0.4, 1.0, 1.0]))

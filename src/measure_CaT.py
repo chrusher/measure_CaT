@@ -1,36 +1,13 @@
 #! /usr/bin/env python
 
 '''
-LICENSE
--------------------------------------------------------------------------------
-Copyright (c) 2015 to 2016, Christopher Usher
-All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+Code to measure the strength of the calcium triplet (CaT) using the template
+fitting method of Foster et al. (2010) and Usher et al. (2018) using input from
+the command line
 
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
--------------------------------------------------------------------------------
-
-Code to run ppxf using input from the command line
-
-Will accept pickled ppxf_data objects (as .ppxf), fits spectra and ascii spectra as input
+Will accept pickled ppxf_data objects (as .ppxf), fits spectra and ascii
+spectra as input
 
 '''
 
@@ -39,7 +16,7 @@ from __future__ import print_function
 import argparse
 import pickle
 
-import run_ppxf
+import ppxf_lib
 import ppxf_data
 
 
@@ -70,13 +47,12 @@ verboseness.add_argument('--loud', action='store_true', help='Provide extra outp
 extras = parser.add_mutually_exclusive_group()
 extras.add_argument('--CaT', action='store_true', help='Measure CaT using Usher+12 technique')
 extras.add_argument('--CaT_C01', action='store_true', help='Measure CaT using Cennaro+01 definition')
-extras.add_argument('--CaT_indo', action='store_true', help='Measure CaT using Cennaro+01 definition')
 extras.add_argument('--kinematics', action='store_true', help='Just measure the kinematics')
 
 parser.add_argument('--no-mask', action='store_true', help='Don\'t mask wavelength ranges with emission lines')
 
 
-parser.add_argument('--templates', nargs='+', help='Template files.\nUse DEIMOS for the DEIMOS templates, Cenarro01 for the Cenarro 2001 library, MILES for the MILES spectral library and INDO for the INDO-US templates')
+parser.add_argument('--templates', nargs='+', help='Template files.\nUse DEIMOS for the DEIMOS templates, Cenarro01 for the Cenarro 2001 library and INDO for the INDO-US templates')
 parser.add_argument('--save', action='store_true', help='Save output as pickled ppxf_data object')
 parser.add_argument('-n', '--name', default='', help='Object name')
 parser.add_argument('-p', '--plot', action='store_true', help='Plot fitted spectra and Monte Carlo results')
@@ -103,19 +79,16 @@ if __name__ == "__main__":
         template_str = 'Using standard templates'
     elif args.templates[0] in ['DEIMOS', 'deimos']:
         template_str = 'Using the DEIMOS templates'
-        templates = run_ppxf.load_CaT_templates
+        templates = ppxf_lib.load_CaT_templates
     elif args.templates[0] in ['Cenarro01', 'C01', 'cenarro', 'Cenarro']:
         template_str = 'Using the Cenarro 2001 templates'
-        templates = run_ppxf.load_C01_templates
-    elif args.templates[0] in ['miles', 'MILES']:
-        template_str = 'Using the MILES templates'
-        templates = run_ppxf.load_miles_templates
+        templates = ppxf_lib.load_C01_templates
     elif args.templates[0] in ['indo', 'INDO']:
         template_str = 'Using the INDO-US templates'
-        templates = run_ppxf.load_indo_templates
+        templates = ppxf_lib.load_indo_templates
     elif args.templates[0] in ['limited']:
         template_str = 'Using the limited INDO-US templates'
-        templates = run_ppxf.load_indo_limited_templates
+        templates = ppxf_lib.load_indo_limited_templates
         
         
     elif args.templates != None:
@@ -125,13 +98,15 @@ if __name__ == "__main__":
     if verbose:
         print(template_str)
 
+    #if input file is a pickled ppxf_data object
     if args.input[-5:] == '.ppxf':
         
         input_datum = pickle.load(open(args.input))
         output_name = args.input[:-5]
         args.save = True
         input_datum.normalisation_technique = args.normalisation
-        
+    
+    #if input file is a fits file    
     elif args.input[-5:] == '.fits':
         
         input_datum = ppxf_data.create_from_fits(args.input, args.errors, ident=args.name, ivars=args.ivars, varis=args.varis, rv_prior=args.rv, sigma_prior=args.sigma, h3_prior=args.h3, h4_prior=args.h4)
@@ -148,28 +123,17 @@ if __name__ == "__main__":
     if args.no_mask:
         mask = None
     else:
-        mask = run_ppxf.CaT_mask        
+        mask = ppxf_lib.CaT_mask        
     
-    if args.kinematics:
-        if args.templates == None:
-            templates = run_ppxf.load_CaT_templates
-
-        output_datum = run_ppxf.ppxf_kinematics(input_datum, templates, nsimulations=args.num_simulations, verbose=verbose, plot=args.plot, moments=args.moments, degree=args.order)
-
         
-    elif args.CaT_C01:
-        if args.templates == None:
-            templates = run_ppxf.load_C01_templates
+    if args.templates == None:
+        templates = ppxf_lib.load_CaT_templates
 
-        output_datum = run_ppxf.ppxf_CaT_C01(input_datum, templates, nsimulations=args.num_simulations, verbose=verbose, plot=args.plot, mask=mask)
-
-
-    else:        
-        if args.templates == None:
-            templates = run_ppxf.load_CaT_templates
-
-        output_datum = run_ppxf.ppxf_CaT(input_datum, templates, nsimulations=args.num_simulations, verbose=verbose, plot=args.plot, mask=mask)
+    #actually do the fit and measurement
+    output_datum = ppxf_lib.ppxf_CaT(input_datum, templates, nsimulations=args.num_simulations, verbose=verbose, plot=args.plot, mask=mask)
         
+
+    #only save results if prompted
     if args.save:
         pickle.dump(output_datum, open(output_name + '.ppxfout', 'w'))
         

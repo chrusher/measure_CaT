@@ -1,8 +1,7 @@
 #! /usr/bin/env python
-'''
-Created on Mar 17, 2011
 
-@author: Chris Usher
+'''
+Interpolate and redisperse 1d spectra
 '''
 
 import numpy as np

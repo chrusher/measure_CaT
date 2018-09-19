@@ -1,12 +1,19 @@
 #! /usr/bin/env python
 
+'''
+This is a group of functions meant to manipulate 1d spectra as numpy arrays
+'''
+
+
 import numpy as np
 import astropy.io.fits as fits
 import os
 
-### This is a group of functions meant to manipulate 1d spectra as numpy arrays
-
-# returns the dispersion and flux as a tuple of arrays from a fits file. The WCS is used to calculate the dispersion. Only simple linear or log dispersion is handled
+'''
+returns the dispersion and flux as a tuple of arrays from a fits file. The WCS
+is used to calculate the dispersion. Only simple linear or log dispersion is
+handled
+'''
 def load(name, extension=0, axis=0):
 
     hdulist = fits.open(open(os.path.abspath(os.path.expanduser(name)), 'rb'))
@@ -34,6 +41,9 @@ def load(name, extension=0, axis=0):
 def read(name, extension=0, axis=0):
     return load(name, extension, axis)
 
+'''
+Same thing as load but takes the flux uncertainties from the second extension
+'''
 def load_with_errors(name):
 
     hdulist = fits.open(open(os.path.abspath(os.path.expanduser(name)), 'rb'))
@@ -62,6 +72,9 @@ def getspectrum(name, extension=0, axis=0):
     
     return load(name, extension, axis)
 
+'''
+Inverse of read
+'''
 def write(name, wavelengths, fluxes, clobber=False):
     hdu = fits.PrimaryHDU(fluxes)
     hdu.header.set('CRPIX1', 1)
@@ -73,6 +86,9 @@ def write(name, wavelengths, fluxes, clobber=False):
     hdulist.writeto(name, clobber=clobber)
     hdulist.close()
 
+'''
+Inverse of load_with_errors
+'''
 def write_errors(name, wavelengths, fluxes, sigmas, clobber=False):
     fhdu = fits.PrimaryHDU(fluxes)
     fhdu.header.set('CRPIX1', 1)

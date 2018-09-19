@@ -1,42 +1,9 @@
 #! /usr/bin/env python
 
 '''
-LICENSE
--------------------------------------------------------------------------------
-Copyright (c) 2015 to 2018, Christopher Usher
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
--------------------------------------------------------------------------------
-
-Any publication resulting from the use of this software should cite Usher et al., 2015, MNRAS, 426, 1475 and Cappellari & Emsellem, 2004, PASP, 116, 138.
-Although modification of this code is encouraged, any publication resulting from
-the modified code should state that the code has been modified and explain how
-the code has been modified.
-
--------------------------------------------------------------------------------
-
 This code is a series of wrappers and utility functions for the pPXF code of
-Cappellari & Emsellen (2004) to allow the 
+Cappellari & Emsellen (2004) to allow the calcium triplet to be measured using
+the template fitting method of Foster et al. (2010) and Usher et al. (2018).
 
  
 
@@ -62,48 +29,21 @@ import onedspec
 import interp
 import normalisation
 import indices
-import boot
 
 '''
 A list of wavelength ranges to mask sky emission lines in region of the calcium
 triplet
 '''
 
-CaT_mask = np.array([[8413, 8418], [8428, 8438],
-[8450, 8455], [8463, 8468], [8492, 8496], [8502, 8507], [8536, 8541], [8546,
-8551], [8586, 8591], [8595, 8599], [8610, 8687], [8757, 8781], [8823, 8839],
-[8848, 8852], [8865,8870], [8882, 8888], [8900, 8906], [8917, 8923], [8941,
-8946], [8955, 8961]])
+CaT_mask = np.array([[8413, 8418], [8428, 8438], [8450, 8455], [8463, 8468],
+                     [8492, 8496], [8502, 8507], [8536, 8541], [8546, 8551],
+                     [8586, 8591], [8595, 8599], [8610, 8687], [8757, 8781],
+                     [8823, 8839], [8848, 8852], [8865, 8870], [8882, 8888],
+                     [8900, 8906], [8917, 8923], [8941, 8946], [8955, 8961]])
 
 '''
-A list of optical emission lines
-                           -----[OII]-----    Hdelta   Hgamma   Hbeta   -----[OIII]-----   [OI]    -----[NII]-----   Halpha   -----[SII]-----
+Wrappers mostly for multiprocessing to work correctly
 '''
-emission_lines = np.array([3726.03, 3728.82, 4101.76, 4340.47, 4861.33, 4958.92, 5006.84, 6300.30, 6548.03, 6583.41, 6562.80, 6716.47, 6730.85])
-
-'''
-This line needs to be updated with the location of your template files
-'''
-default_templates = os.path.expanduser('~') + '/ppxf_templates/'
-
-'''
-mask optical emission lines in emission_lines
-based on 'emission_lines' in ppxf_util.py
-'''
-def emission_line_mask(rv, width=800):
-    
-    mask = []
-    
-    for line in emission_lines:
-        
-        lower = np.exp(np.log(line) + (rv - width) * 1e3 / constants.c)
-        upper = np.exp(np.log(line) + (rv + width) * 1e3 / constants.c)
-        
-        mask.append([lower, upper])
-    
-    mask = np.array(mask)    
-    return mask
-
 def _each_sample(sample):
     return (each_sample(*sample))
 
@@ -167,7 +107,7 @@ def measure_CaT_C01(datum):
       
 '''
 '''  
-# these DEIMOS templates should be in the git repository
+# these DEIMOS templates should be in the templates directory
 def load_CaT_templates(log_dispersion, interp_func='nearest'):
     CaT_templates = glob.glob(default_templates + 't*.fits')
     return load_fits_templates(CaT_templates, log_dispersion, interp_func)
@@ -187,6 +127,7 @@ def load_C01_templates(log_dispersion, interp_func='nearest'):
     CaT_templates = glob.glob(default_templates + 'scan*.fits') 
     return load_fits_templates(CaT_templates, log_dispersion, interp_func)
 
+# these Indo-US templates should be in thetemplates directory
 def load_indo_limited_templates(log_dispersion, interp_func='nearest'):
     CaT_templates = glob.glob(default_templates + 'indo-us*.fits')
     CaT_templates.remove(default_templates + 'indo-us_k.fits')
@@ -201,7 +142,9 @@ def load_indo_k_templates(log_dispersion, interp_func='nearest'):
     CaT_templates = glob.glob(default_templates + 'indo-us*.fits') + glob.glob(default_templates + 'extend_indo-us*.fits')
     return load_fits_templates(CaT_templates, log_dispersion, interp_func)
 
-
+'''
+Load template files and redisperse them to match the observed spectrum
+'''
 def load_fits_templates(template_files, log_dispersion, interp_func='nearest'):
     
     #print(len(template_files))
@@ -218,14 +161,10 @@ def load_fits_templates(template_files, log_dispersion, interp_func='nearest'):
     return log_template_wavelengths, log_templates
 
     
-#def ppxf_kinematics(datum, get_templates, nsimulations=0, mask=None, moments=2, degree=7, verbose=True, plot=False):
-#    
-#    fields = ['rv', 'sigma']
-#    if moments == 4:
-#        fields += ['h3', 'h4']
-#    
-#    return run_ppxf(datum, get_templates, nsimulations, mask=mask, fields=fields, moments=moments, degree=degree, verbose=verbose, plot=plot)
-    
+'''
+Cuts input spectrum to CaT measurement wavelength range and calculates S/N of
+the input spectrum
+'''
 def ppxf_CaT(datum, get_templates=load_CaT_templates, nsimulations=0, mask=CaT_mask, extra_function=measure_CaT, fields=['rv', 'sigma', 'CaT'], verbose=True, plot=False, interp_func='nearest'):
     zp1 = 1 + datum.rv_prior * 1e3 / constants.c
     
@@ -253,25 +192,12 @@ def ppxf_CaT(datum, get_templates=load_CaT_templates, nsimulations=0, mask=CaT_m
         print('S/N:', datum.s2n)
     
     return run_ppxf(datum, get_templates, nsimulations, mask, extra_function, fields, moments=2, degree=7, verbose=verbose, plot=plot, interp_func=interp_func)
-
     
     
-#def ppxf_CaT_C01(datum, get_templates=load_C01_templates, nsimulations=0, mask=CaT_mask, extra_function=measure_CaT_C01, fields=['rv', 'sigma', 'CaT_C01'], verbose=True, plot=False):
-#    zp1 = 1 + datum.rv_prior * 1e3 / constants.c
-#    catrange = (datum.input_wavelengths > 8425 * zp1) & (datum.input_wavelengths < 8850 * zp1)
-#    
-#    datum.origial_wavelengths = datum.input_wavelengths
-#    datum.origial_fluxes = datum.input_fluxes
-#    datum.origial_sigmas = datum.input_sigmas
-#    
-#    datum.input_wavelengths = datum.input_wavelengths[catrange]
-#    datum.input_fluxes = datum.input_fluxes[catrange]
-#    datum.input_sigmas = datum.input_sigmas[catrange]    
-#    
-#    return run_ppxf(datum, get_templates, nsimulations, mask, extra_function, fields, moments=2, degree=7, verbose=verbose, plot=plot)
-    
-    
-    
+'''
+Format input for pPXF and call pPXF
+Calculate uncertanties using Monte Carlo technique
+'''
 def run_ppxf(datum, get_templates, nsimulations, mask=None, extra_function=None, fields=['rv', 'sigma'], moments=2, degree=7, verbose=True, plot=False, interp_func='nearest'):
 
     if verbose:
@@ -283,12 +209,13 @@ def run_ppxf(datum, get_templates, nsimulations, mask=None, extra_function=None,
 
     start = datetime.datetime.now()
     
+    #Some sanity checks
     if datum.input_sigmas.min() <= 0:
         raise Exception('Non-positive sigmas')
     if datum.input_fluxes.size != datum.input_sigmas.size or datum.input_wavelengths.size != datum.input_fluxes.size:
         raise Exception('Mismatched array lengths')
     
-    if datum.sigma_prior == 0:
+    if datum.sigma_prior <= 0:
         raise Exception('Sigma must be positive')
     
     
@@ -298,7 +225,7 @@ def run_ppxf(datum, get_templates, nsimulations, mask=None, extra_function=None,
     datum.log_wavelengths, datum.log_fluxes = interp.lineartolog(datum.input_wavelengths, datum.input_fluxes, function=interp_func, ratio=True)
     datum.log_wavelengths, datum.log_sigmas = interp.lineartolog(datum.input_wavelengths, datum.input_sigmas, function=interp_func, ratio=True)
     
-
+    #Redisperse the spectrum to what pPXF expects
     logDispersion = np.log10(datum.log_wavelengths[1]) - np.log10(datum.log_wavelengths[0])
     if hasattr(get_templates, '__call__'): 
         log_template_wavelengths, log_templates = get_templates(logDispersion, interp_func)
@@ -307,6 +234,7 @@ def run_ppxf(datum, get_templates, nsimulations, mask=None, extra_function=None,
     delta_v = (np.log(log_template_wavelengths[0]) - np.log(datum.log_wavelengths[0])) * constants.c / 1e3
     vel_scale = logDispersion * np.log(10) * constants.c / 1e3
 
+    #mask pixels
     regionmask = np.ones(datum.log_wavelengths.size, dtype=np.bool_)
     
     bad_pixels = np.isfinite(datum.log_sigmas)
@@ -329,7 +257,7 @@ def run_ppxf(datum, get_templates, nsimulations, mask=None, extra_function=None,
     if extra_function != None:
         extra_function(datum)
         
-    
+    #Do the Monte Carlo uncertainty calculations
     if nsimulations > 0:
         
         samples = []
@@ -346,11 +274,7 @@ def run_ppxf(datum, get_templates, nsimulations, mask=None, extra_function=None,
         if verbose > 1:
             print('Using', workers, 'workers')
         sample_results = pool.map(_each_sample, samples)
-        
-#         sample_results = []
-#         for sample in samples:
-#             sample_results.append(_each_sample(sample))
-        
+                
         field_results = {}
         for field in fields:
             field_results[field] = []
@@ -367,7 +291,7 @@ def run_ppxf(datum, get_templates, nsimulations, mask=None, extra_function=None,
             
             setattr(datum, field + '_samples', field_data)
             
-            peak, lower, upper, spline = boot.kde_interval(field_data)
+            peak, lower, upper, spline = kde_interval(field_data)
             
             lower_limit = datum.__dict__[field] - lower
             upper_limit = upper - datum.__dict__[field]
@@ -402,14 +326,67 @@ def run_ppxf(datum, get_templates, nsimulations, mask=None, extra_function=None,
         
     return datum
 
+'''
+calculate n sigma interval of data
+start at peak probability
+integrate between two points where pdf function equals half max prob
+'''
+def kde_interval(data, sigma=1):
+    
+    p_sigma = stats.norm.cdf(sigma) - stats.norm.cdf(-sigma)
+#    print p_sigma
+    data = np.asanyarray(data)
+    
+    xs = np.linspace(2 * data.min() - data.mean(), 2 * data.max() - data.mean(), 512)
+    
+    # use gaussian kernel estimation and a spline to create an analytic pdf from data array
+    spline = interpolate.InterpolatedUnivariateSpline(xs, stats.gaussian_kde(data)(xs))
+    
+    pdf_max = spline(xs).max()
+    pdf = pdf_max / 2
+    count = -2
+    diff = 1
+    roots = None
+    
+    while diff > 0.0025 and count > -20:
+        
+        shifted_spline = interpolate.InterpolatedUnivariateSpline(xs, spline(xs) - pdf)
+        roots = shifted_spline.roots()
+    
+        if roots.size % 2 != 0:
+            roots = None
+            pdf += 2**-20
+            continue
 
+        p = spline.integral(roots[0], roots[-1])
+                    
+        if p > p_sigma:
+            pdf += pdf_max * 2**count
+        else:
+            pdf -= pdf_max * 2**count
+        
+        count += -1
+        diff = np.abs(p - sigma)    
+    
+    peak = xs[spline(xs) == pdf_max].mean()
+    
+    sorted_data = data[data.argsort()]
+    
+    return (peak, roots[0], roots[-1], spline)
+
+'''
+Print fields (and if available their confidence intervals)
+'''
 def print_fields(datum):
     for field in datum.fields:
         if datum.nsimulations > 0:
             print(field + ':', round(datum.__dict__[field], 4), '-' + str(round(datum.__dict__[field + '_lower'], 4)), '+' + str(round(datum.__dict__[field + '_upper'], 4)))
         else:
             print(field + ':', round(datum.__dict__[field], 4))
-            
+
+'''
+Plot the input spectrum and the fitteded templates
+'''             
 def plot_fit(datum):
     
     import matplotlib.pyplot as plt
@@ -432,15 +409,3 @@ def plot_fit(datum):
     plt.xlabel(u'Wavelength (\u00C5)')
     
     
-#    plt.figure(figsize=(12, 7))
-#    plt.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.96)
-#    plt.title(datum.ident + ' ' + datum.filename)
-#    
-#    plt.plot(datum.log_wavelengths, datum.log_fluxes, 'k-')
-#    plt.plot(datum.log_wavelengths, datum.log_fit_fluxes, 'r-', lw=1.5)
-#    #plt.plot(datum.input_wavelengths, datum.input_sigmas, '-', color='0.5')
-#    #plt.plot(datum.fit_wavelengths, datum.fit_fluxes / datum.normed_fluxes, 'b:')
-#    delta_wavelengths = datum.input_wavelengths.max() - datum.input_wavelengths.min()
-#    plt.xlim(datum.input_wavelengths.min() - 0.02 * delta_wavelengths, datum.input_wavelengths.max() + 0.02 * delta_wavelengths)    
-#    plt.ylim(-mean_flux / 20, max(mean_flux + 3 * datum.fit_fluxes.std(), datum.input_fluxes.mean() + 2 * datum.input_fluxes.std()))
-#    plt.xlabel(u'Wavelength (\u00C5)')    

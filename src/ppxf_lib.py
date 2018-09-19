@@ -170,7 +170,7 @@ def load_fits_templates(template_files, log_dispersion, interp_func='nearest'):
 Cuts input spectrum to CaT measurement wavelength range and calculates S/N of
 the input spectrum
 '''
-def ppxf_CaT(datum, get_templates=load_CaT_templates, nsimulations=0, mask=CaT_mask, extra_function=measure_CaT, fields=['rv', 'sigma', 'CaT'], verbose=True, plot=False, interp_func='nearest'):
+def ppxf_CaT(datum, get_templates=load_CaT_templates, nsimulations=0, mask=None, extra_function=measure_CaT, fields=['rv', 'sigma', 'CaT'], verbose=True, plot=False, interp_func='nearest'):
     zp1 = 1 + datum.rv_prior * 1e3 / constants.c
     
     lower_wavelength = 8437.0

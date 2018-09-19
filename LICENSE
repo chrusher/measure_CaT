@@ -23,11 +23,3 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
--------------------------------------------------------------------------------
-
-Any publication resulting from the use of this software should cite
-Usher et al., 2015, MNRAS, 426, 1475 and Cappellari & Emsellem, 2004, PASP,
-116, 138. Although modification of this code is encouraged, any publication
-resulting from the modified code should state that the code has been modified
-and explain how the code has been modified.

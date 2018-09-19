@@ -60,7 +60,7 @@ class ppxf_data():
     h3_prior : prior on the h3 moment
     h4_prior : prior on the h4 moment 
     '''
-    def __init__(self, wavelengths, fluxes, sigmas, ident='', filename='', rv_prior=0, sigma_prior=10, h3_prior=0, h4_prior=0):
+    def __init__(self, wavelengths, fluxes, sigmas=None, ident='', filename='', rv_prior=0, sigma_prior=10, h3_prior=0, h4_prior=0):
         
         self.ident = ident 
         self.filename = filename
@@ -70,9 +70,11 @@ class ppxf_data():
         self.h3_prior = h3_prior
         self.h4_prior = h4_prior
         
-        self.input_wavelengths = wavelengths
-        self.input_fluxes = fluxes
-        self.input_sigmas = sigmas
+        self.input_wavelengths = np.asarray(wavelengths)
+        self.input_fluxes = np.asarray(fluxes)
+        if sigmas is None:
+            sigmas = np.ones(fluxes.size) * np.median(fluxes)**0.5
+        self.input_sigmas = np.asarray(sigmas)
         
     def __str__(self):
         return '<ppxf_data> ' + self.ident + ' ' + self.filename

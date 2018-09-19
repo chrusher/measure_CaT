@@ -49,7 +49,7 @@ extras.add_argument('--CaT', action='store_true', help='Measure CaT using Usher+
 extras.add_argument('--CaT_C01', action='store_true', help='Measure CaT using Cennaro+01 definition')
 extras.add_argument('--kinematics', action='store_true', help='Just measure the kinematics')
 
-parser.add_argument('--no-mask', action='store_true', help='Don\'t mask wavelength ranges with emission lines')
+parser.add_argument('--mask', action='store_true', help='Mask wavelength ranges with emission lines')
 
 
 parser.add_argument('--templates', nargs='+', help='Template files.\nUse DEIMOS for the DEIMOS templates, Cenarro01 for the Cenarro 2001 library and INDO for the INDO-US templates')
@@ -120,10 +120,10 @@ if __name__ == "__main__":
         input_datum.normalisation_technique = args.normalisation
         output_name = args.input
 
-    if args.no_mask:
-        mask = None
+    if args.mask:
+        mask = ppxf_lib.CaT_mask
     else:
-        mask = ppxf_lib.CaT_mask        
+        mask = None        
     
         
     if args.templates == None:

@@ -42,6 +42,11 @@ CaT_mask = np.array([[8413, 8418], [8428, 8438], [8450, 8455], [8463, 8468],
                      [8900, 8906], [8917, 8923], [8941, 8946], [8955, 8961]])
 
 '''
+Where to find the template files
+'''
+default_templates = os.environ['PPXF_TEMPLATES']
+
+'''
 Wrappers mostly for multiprocessing to work correctly
 '''
 def _each_sample(sample):

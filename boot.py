@@ -1,9 +1,36 @@
 #! /usr/bin/env python 
 '''
-Created on Sep 24, 2012
+LICENSE
+-------------------------------------------------------------------------------
+Copyright (c) 2015 to 2018 Christopher Usher
+All rights reserved.
 
-@author: Chris Usher
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-------------------------------------------------------------------------------
+
+Collection of statistical functions
+
 '''
+
 
 from __future__ import print_function
 
@@ -133,27 +160,6 @@ def bootstrap(xs, ys, yes, func, n=1000, names=None, title='', verbose=True, plo
         print('Using', workers, 'workers for', len(samples), 'samples')
     fits = pool.map(_each_sample, samples)                
                 
-#    while i < n:
-#        try:
-#            points = np.random.randint(0, length, length)
-#            sample_xs = xs.T[points].T
-#            sample_ys = ys[points]
-#            sample_yes = yes[points] 
-#            
-#            if optimizer == None:
-#                sample_fit = optimize.curve_fit(fitting_func, sample_xs, sample_ys, p0=p0, sigma=sample_yes)[0]
-#            else:
-#                sample_fit = optimizer(sample_xs, sample_ys, sample_yes)
-#            
-#            fits.append(sample_fit)
-#            i += 1
-#            if counter:
-#                print(i, 'of', n)
-#            
-#        except(RuntimeError, subprocess.CalledProcessError):
-#            print('Error')
-#            pass
-
     fits = np.array(fits)
     if names == None or len(names) != fits.shape[1]:
         names = range(fits.shape[1])

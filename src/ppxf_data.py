@@ -3,7 +3,7 @@
 '''
 LICENSE
 -------------------------------------------------------------------------------
-Copyright (c) 2015, Christopher Usher
+Copyright (c) 2015 to 2018 Christopher Usher
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -------------------------------------------------------------------------------
 
 Defines the ppxf_data class and provides functions for creating ppxf_data
-objects from spectra
+objects from fits files or ascii files
 
 
 
@@ -81,7 +81,7 @@ class ppxf_data():
 '''
 Create a ppxf_data object from a fits file or two
 
-fluxes_file : the input flux
+fluxes_file : the input fluxes
 sigmas_file : the uncertainties (optional)
 ident : the object identifier
 filename : file that is the source of the input spectrum. defaults to the value of fluxes_file
@@ -90,6 +90,7 @@ ivars
 '''
 def create_from_fits(fluxes_file, sigmas_file=None, ident='', filename=None, ivars=True, varis=False, rv_prior=0, sigma_prior=10, h3_prior=0, h4_prior=0):
     
+    #try and get the uncertainties from the same file as the fluxes
     try:
         wavelengths, fluxes, sigmas = onedspec.load_with_errors(fluxes_file)
         
@@ -106,6 +107,7 @@ def create_from_fits(fluxes_file, sigmas_file=None, ident='', filename=None, iva
         else:
             sigmas = np.ones(fluxes.size) * np.median(fluxes)
     
+    #get the RA and Dec
     try:        
         raw_ra, raw_dec = onedspec.listheader(fluxes_file, ['RA', 'DEC'])
         coordinates = astropy.coordinates.SkyCoord(raw_ra, raw_dec, unit=(astropy.units.hourangle, astropy.units.deg))
@@ -127,6 +129,8 @@ def create_from_fits(fluxes_file, sigmas_file=None, ident='', filename=None, iva
 
 '''
 Create a ppxf_data object from an ascii file
+This assumes that the first column is the wavelength, the second is the fluxes
+and the optional thrid column is the uncertainties
 '''
 def create_from_ascii(ascii_file, ident='', filename=None, ivars=False, varis=False, rv_prior=0, sigma_prior=10, h3_prior=0, h4_prior=0):
     wavelengths = []
@@ -154,12 +158,12 @@ def create_from_ascii(ascii_file, ident='', filename=None, ivars=False, varis=Fa
         
         wavelengths.append(float(substrs[0]))
         fluxes.append(float(substrs[1]))
-        if columns == 3:
+        if columns >= 3:
             sigmas.append(float(substrs[2]))
     
     wavelengths = np.array(wavelengths)
     fluxes = np.array(fluxes)
-    if columns == 3:
+    if columns >= 3:
         sigmas = np.array(sigmas)
     else:
         sigmas = np.ones(fluxes.size)

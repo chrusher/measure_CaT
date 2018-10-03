@@ -1,5 +1,5 @@
 # measure_CaT
-Code to measure the strength of the calcium triplet (CaT) spectral feature by fitting stellar templates using the method described in [Foster et al. (2010)](https://ui.adsabs.harvard.edu/#abs/2010AJ....139.1566F/abstract) and Usher et al. (2018).
+Code to measure the strength of the calcium triplet (CaT) spectral feature by fitting stellar templates using the method described in [Foster et al. (2010)](https://ui.adsabs.harvard.edu/#abs/2010AJ....139.1566F/abstract) and [Usher et al. (2018)](https://arxiv.org/abs/1809.07650).
 
 As described in Usher et al. (2018), the code measures the strength of the CaT by fitting a linear combination of stellar templates using the pPXF code of [Cappellari & Emsellem (2004)](https://ui.adsabs.harvard.edu/#abs/2004PASP..116..138C), normalising the fitted templates using a polynomial fit to regions of low line opacity, and then measure the index strength on the normalised templates. Some of the code was written to be a more general wrapper around pPXF.
 

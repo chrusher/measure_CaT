@@ -22,6 +22,8 @@ import multiprocessing
 
 import numpy as np
 from scipy import constants
+from scipy import stats
+from scipy import interpolate
 
 import ppxf
 import ppxf_data

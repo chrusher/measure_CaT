@@ -52,9 +52,9 @@ Wrappers mostly for multiprocessing to work correctly
 def _each_sample(sample):
     return (each_sample(*sample))
 
-def each_sample(datum, templates, vel_scale, delta_v, good_pixels, quiet, moments, degree, extra):
+def each_sample(datum, templates, vel_scale, delta_v, good_pixels, quiet, moments, degree, extra, interp_func='nearest'):
     
-    call_ppxf(datum, templates, vel_scale, delta_v, good_pixels, quiet, moments, degree)
+    call_ppxf(datum, templates, vel_scale, delta_v, good_pixels, quiet, moments, degree, interp_func)
     if extra != None:
         extra(datum)
     return datum

@@ -243,16 +243,15 @@ def run_ppxf(datum, get_templates, nsimulations, mask=None, extra_function=None,
 
     #mask pixels
     regionmask = np.ones(datum.log_wavelengths.size, dtype=np.bool_)
-    
-    bad_pixels = np.isfinite(datum.log_sigmas)
-    np.putmask(datum.log_sigmas, ~np.isfinite(datum.log_sigmas) | (datum.log_sigmas < 0), np.median(datum.log_fluxes) * 1e3)
+    bad_pixels = np.isfinite(datum.log_sigmas) & (datum.log_sigmas > 0) 
+    #replace infinite or non-positive sigmas with a large value
+    np.putmask(datum.log_sigmas, ~bad_pixels, np.max(datum.log_fluxes) * 1e3)
     
     if mask is not None:
         for maskregion in mask:
             regionmask = regionmask & ~((datum.log_wavelengths > maskregion[0]) & (datum.log_wavelengths < maskregion[1]))
             
     regionmask = regionmask & bad_pixels 
-    
     good_pixels = np.nonzero(regionmask)[0]
     
     if verbose > 1:

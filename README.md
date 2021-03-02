@@ -23,6 +23,6 @@ where `wavelengths`, `fluxes` and `sigmas` are 1d Numpy arrays contain the wavel
 
 Christopher Usher
 
-c.g.usher@ljmu.ac.uk
+chris.usher@astro.se.su
 
 2018-09-19  Liverpool
